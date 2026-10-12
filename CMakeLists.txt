@@ -11,7 +11,13 @@ if(CMAKE_HOST_APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     )
 endif()
 
-project(pt_port LANGUAGES C CXX)
+# OBJCXX on macOS for the Apple MetalFX upscaler (cmake/MacOS.cmake, metalfx_backend.mm); the language is set here so its
+# variables are initialized, as enable_language after project does not
+if(CMAKE_HOST_APPLE OR APPLE)
+    project(pt_port LANGUAGES C CXX OBJCXX)
+else()
+    project(pt_port LANGUAGES C CXX)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -60,10 +66,11 @@ set(PT_VERSION_OVERRIDE
     CACHE STRING
     "Version for this build folder instead of the one in CMakeLists.txt"
 )
-set(PT_VERSION "1.0.2")
 
 if(PT_VERSION_OVERRIDE)
     set(PT_VERSION "${PT_VERSION_OVERRIDE}")
+else()
+    set(PT_VERSION "1.0.3")
 endif()
 
 # not a cache variable: an old build folder must not keep a stale address (PT_UPDATE_MANIFEST_URL_OVERRIDE sets one for a build folder)

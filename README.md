@@ -25,8 +25,9 @@ the street, with the voice part included.
   ray-traced shadows, ambient occlusion and reflections need a GPU with Vulkan ray queries (not on macOS). DLSS needs a
   GeForce RTX card; FSR and XeSS run on any recent GPU (Windows only). The settings page greys out what your machine
   cannot run and says why.
-- A microphone for one part of the game, as on the PS4. If you have none, `key = J` under `[voice]` in `pt.ini` lets a
-  key stand in for the spoken word.
+- A microphone for one part of the game, as on the PS4 (saying "Jack"). **No microphone? No problem, and no file to
+  edit:** open **PC settings > Sound**, turn on **Assign J / L2 + R2 for the microphone trigger**, then press **J** on
+  the keyboard or **both triggers together** on a controller when the game is listening.
 
 ## Installing
 
@@ -78,7 +79,7 @@ Display and image
   fullscreen lists supported display modes; borderless keeps the desktop window and can render at another selected size.
 - Upscalers: AMD FSR 3.1, NVIDIA DLSS 4.5 (with a choice of model) and Intel XeSS, in the usual quality steps or a
   custom scale, plus native-resolution anti-aliasing (FSR native AA, DLAA).
-- Frame generation: AMD FSR 3 on Radeon RX 5000 or newer, NVIDIA DLSS Frame Generation on RTX 40 or newer.
+- Frame generation: AMD FSR 3 on Radeon RX 5000 or newer, NVIDIA DLSS Frame Generation on RTX 40 or newer, Apple MetalFX Frame Interpolation on Apple silicon with macOS 26 or newer (macOS only; experimental).
 - Graphics presets Low, Medium, Original (PS4), High, Ultra and Custom. The individual controls cover shadow map size,
   ray-traced shadows (sharp like the original or soft), contact shadows, ray-traced ambient occlusion, ray-traced floor
   reflections, anisotropic filtering, enhanced textures (2x upscaled once from your own files with Real-ESRGAN, cached
@@ -110,8 +111,9 @@ Languages
   original English, and the word the microphone listens for is always "Jack".
 
 Mods
-- A `mods` folder next to the executable can replace game files, textures and sounds, and run Lua scripts that react
-  to game events. See docs/modding.md and docs/lua_api.md.
+- A `mods` folder next to the executable: add or replace models with your own glTF (`.glb`) files, Lisa included, edit
+  levels with a `level.json` (hide, move, replace, relight), replace textures and sounds, and run Lua scripts. Start with
+  docs/modding-quickstart.md and the working examples in examples/mods.
 
 ## Building from source
 
@@ -130,8 +132,10 @@ GCC 13 or clang 17, the Vulkan headers and `glslc`. The upscalers are Windows-on
 
 macOS (Apple silicon or Intel, built for the CPU it runs on): the command line tools, then `brew install cmake ninja shaderc
 vulkan-headers vulkan-loader` and `cmake -G Ninja -B build/macos -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build
-build/macos --target pt`. `python3 tools/macos/make_app.py` makes the app bundle and its zip. The upscalers and the VR mode
-are left out there too, and MoltenVK has no ray queries. More in docs/macos.md.
+build/macos --target pt`. `python3 tools/macos/make_app.py` makes the app bundle and its zip. The Windows upscalers and the
+VR mode are left out there too, and MoltenVK has no ray queries. The macOS build upscales with Apple MetalFX; on Apple silicon
+with macOS 26 or newer it can also interpolate one frame between rendered frames (experimental). `-DPT_METALFX=OFF` leaves
+both out. More in docs/macos.md.
 
 The unit tests are CMake targets (`pt_tests`, `pt_mods_test` and the others in CMakeLists.txt). `python
 tools/walkthrough.py --exe build/release/pt.exe --game <folder>` plays the whole game without a window through the
