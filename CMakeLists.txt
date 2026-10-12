@@ -99,8 +99,7 @@ add_custom_target(
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/generated/pt_version.h"
 )
 
-add_library(pt_engine STATIC ${PT_ENGINE_SOURCES} ${PT_GAME_SOURCES})
-pt_setcommontargetproperties(pt_engine)
+pt_addlibrary(pt_engine STATIC ${PT_ENGINE_SOURCES} ${PT_GAME_SOURCES})
 
 # Game+ (docs/gameplay.md, Game+): the content a finished game unlocks, ON since 1.0 (every release ships it). OFF builds keep
 # it inert (the save still stores the finish tag and count, nothing else changes). The first configure takes the default from
@@ -177,14 +176,25 @@ function(pt_setcommontargetproperties name)
     endif()
 endfunction()
 
-# Add an executable with common properties, using the `pt_engine` target.
+# Add an executable with common properties.
 function(pt_addexecutable name)
     add_executable(${name} ${ARGN})
-    target_link_libraries(${name} PRIVATE pt_engine)
     pt_setcommontargetproperties(${name})
 endfunction()
 
-pt_addexecutable(pt WIN32 src/main.cpp)
+# Add a library with common properties.
+function(pt_addlibrary name)
+    add_library(${name} ${ARGN})
+    pt_setcommontargetproperties(${name})
+endfunction()
+
+# Add an executable with common properties, using the `pt_engine` target.
+function(pt_addengineexecutable name)
+    pt_addexecutable(${name} ${ARGN})
+    target_link_libraries(${name} PRIVATE pt_engine)
+endfunction()
+
+pt_addengineexecutable(pt WIN32 src/main.cpp)
 
 if(WIN32)
     target_sources(pt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/pt.rc")
@@ -208,7 +218,7 @@ add_dependencies(pt pt_build_id)
 # the release 1.0 game: the loop browser stays locked until the game was finished once, its entries open as their loops are reached
 # (PT_RELEASE_LOCKS, docs/gameplay.md loop browser); pt (developer) keeps every entry open. tools/ci/release.py
 # builds it and tools/package.py --exe ships it as pt.exe
-pt_addexecutable(pt_release WIN32 EXCLUDE_FROM_ALL src/main.cpp)
+pt_addengineexecutable(pt_release WIN32 EXCLUDE_FROM_ALL src/main.cpp)
 
 if(WIN32)
     target_sources(pt_release PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/pt.rc")
@@ -223,8 +233,8 @@ target_include_directories(
 
 add_dependencies(pt_release pt_build_id)
 
-pt_addexecutable(pt_gouge_input_test tests/gouge_input_test.cpp)
-pt_addexecutable(pt_outro_input_test tests/outro_input_test.cpp)
+pt_addengineexecutable(pt_gouge_input_test tests/gouge_input_test.cpp)
+pt_addengineexecutable(pt_outro_input_test tests/outro_input_test.cpp)
 
 set(PT_SETUP_PAYLOAD
     "${CMAKE_CURRENT_SOURCE_DIR}/dump/installer-20261002/native/payload.bin"
@@ -270,7 +280,7 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
                 "${PT_SETUP_PAYLOAD};${PT_SETUP_MANIFEST};${CMAKE_CURRENT_SOURCE_DIR}/assets/pt.ico"
     )
 
-    add_executable(
+    pt_addexecutable(
         pt_setup
         WIN32
         EXCLUDE_FROM_ALL
@@ -279,7 +289,6 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
         src/engine/platform/update_check.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/private-setup.rc"
     )
-    pt_setcommontargetproperties(pt_setup)
 
     target_include_directories(
         pt_setup
@@ -315,7 +324,7 @@ endif()
 
 if(NOT WIN32)
     # the Linux installer (installer/Native/setup_linux.cpp); tools/linux/attach_payload.py appends the payload after the build
-    add_executable(
+    pt_addexecutable(
         pt_setup_linux
         EXCLUDE_FROM_ALL
         installer/Native/setup_linux.cpp
@@ -323,7 +332,6 @@ if(NOT WIN32)
         src/engine/platform/update_check.cpp
         src/engine/platform/os.cpp
     )
-    pt_setcommontargetproperties(pt_setup_linux)
 
     target_include_directories(
         pt_setup_linux
@@ -427,14 +435,14 @@ foreach(game pt pt_release)
     add_dependencies(${game} pt_voice_runtime)
 endforeach()
 
-pt_addexecutable(pt_tests tests/test_strcode.cpp)
-pt_addexecutable(pt_voice_match_test tests/voice_match_test.cpp)
-pt_addexecutable(pt_vfx_test tests/vfx_test.cpp)
-pt_addexecutable(pt_collision_test tests/collision_test.cpp)
-pt_addexecutable(pt_localization_test tests/localization_test.cpp)
+pt_addengineexecutable(pt_tests tests/test_strcode.cpp)
+pt_addengineexecutable(pt_voice_match_test tests/voice_match_test.cpp)
+pt_addengineexecutable(pt_vfx_test tests/vfx_test.cpp)
+pt_addengineexecutable(pt_collision_test tests/collision_test.cpp)
+pt_addengineexecutable(pt_localization_test tests/localization_test.cpp)
 
-pt_addexecutable(pt_texture_cache_test tests/texture_cache_test.cpp)
-pt_addexecutable(pt_texture_job_test tests/texture_job_test.cpp)
+pt_addengineexecutable(pt_texture_cache_test tests/texture_cache_test.cpp)
+pt_addengineexecutable(pt_texture_job_test tests/texture_job_test.cpp)
 
 set(PT_TEXTURE_DESCRIPTOR_SHADER
     "${CMAKE_CURRENT_BINARY_DIR}/tests/texture_descriptor.comp.spv"
@@ -457,7 +465,7 @@ add_custom_target(
     DEPENDS "${PT_TEXTURE_DESCRIPTOR_SHADER}"
 )
 
-pt_addexecutable(pt_texture_descriptor_test tests/texture_descriptor_test.cpp)
+pt_addengineexecutable(pt_texture_descriptor_test tests/texture_descriptor_test.cpp)
 target_compile_definitions(
     pt_texture_descriptor_test
     PRIVATE PT_TEXTURE_DESCRIPTOR_SHADER="${PT_TEXTURE_DESCRIPTOR_SHADER}"
@@ -489,7 +497,7 @@ add_custom_target(
     DEPENDS "${PT_REFLECTION_MIX_SHADER}"
 )
 
-pt_addexecutable(pt_reflection_mix_test tests/reflection_mix_test.cpp)
+pt_addengineexecutable(pt_reflection_mix_test tests/reflection_mix_test.cpp)
 target_compile_definitions(
     pt_reflection_mix_test
     PRIVATE PT_REFLECTION_MIX_SHADER="${PT_REFLECTION_MIX_SHADER}"
@@ -497,57 +505,57 @@ target_compile_definitions(
 
 add_dependencies(pt_reflection_mix_test pt_reflection_mix_shader)
 
-pt_addexecutable(
+pt_addengineexecutable(
     pt_dualsense_probe
     EXCLUDE_FROM_ALL
     tests/dualsense_hid_probe.cpp
 )
 
-pt_addexecutable(pt_audio_channel_layout_test tests/audio_channel_layout_test.cpp)
-pt_addexecutable(pt_controller_feedback_test tests/controller_feedback_test.cpp)
-pt_addexecutable(pt_photo_preset_test tests/photo_preset_test.cpp)
-pt_addexecutable(pt_photo_panel_test tests/photo_panel_test.cpp)
-pt_addexecutable(
+pt_addengineexecutable(pt_audio_channel_layout_test tests/audio_channel_layout_test.cpp)
+pt_addengineexecutable(pt_controller_feedback_test tests/controller_feedback_test.cpp)
+pt_addengineexecutable(pt_photo_preset_test tests/photo_preset_test.cpp)
+pt_addengineexecutable(pt_photo_panel_test tests/photo_panel_test.cpp)
+pt_addengineexecutable(
     pt_controller_speaker_route_test
     tests/controller_speaker_route_test.cpp
 )
 
-pt_addexecutable(pt_hdr_output_test tests/hdr_output_test.cpp)
-pt_addexecutable(pt_audio_test tests/audio_test.cpp)
+pt_addengineexecutable(pt_hdr_output_test tests/hdr_output_test.cpp)
+pt_addengineexecutable(pt_audio_test tests/audio_test.cpp)
 
-pt_addexecutable(pt_graphics_preset_test tests/graphics_preset_test.cpp)
+pt_addengineexecutable(pt_graphics_preset_test tests/graphics_preset_test.cpp)
 
 # the full screen blur's pulse start per game frame (0x9231D0), src/game/blur_sway.h
-pt_addexecutable(pt_blur_sway_test tests/blur_sway_test.cpp)
+pt_addengineexecutable(pt_blur_sway_test tests/blur_sway_test.cpp)
 
-pt_addexecutable(pt_unicode_paths_test tests/unicode_paths_test.cpp)
-pt_addexecutable(pt_user_data_test tests/user_data_test.cpp)
-pt_addexecutable(pt_settings_roundtrip_test tests/settings_roundtrip_test.cpp)
+pt_addengineexecutable(pt_unicode_paths_test tests/unicode_paths_test.cpp)
+pt_addengineexecutable(pt_user_data_test tests/user_data_test.cpp)
+pt_addengineexecutable(pt_settings_roundtrip_test tests/settings_roundtrip_test.cpp)
 
 # the published body yaw that PlayerInputDir (0x915850) reads
-pt_addexecutable(pt_player_publish_test tests/player_publish_test.cpp)
+pt_addengineexecutable(pt_player_publish_test tests/player_publish_test.cpp)
 
 # the hair highlight's dominant light direction over time (0x8D12A0)
-pt_addexecutable(pt_dominant_light_test tests/dominant_light_test.cpp)
+pt_addengineexecutable(pt_dominant_light_test tests/dominant_light_test.cpp)
 
 # the VR mode's view mapping (src/engine/xr/xr_view.h, docs/vr.md)
-pt_addexecutable(pt_vr_view_test tests/vr_view_test.cpp)
+pt_addengineexecutable(pt_vr_view_test tests/vr_view_test.cpp)
 
 # the hardware check of FSR 3 frame generation (src/engine/render/upscale/upscale.h, docs/upscaling.md)
-pt_addexecutable(pt_upscaler_gpu_test tests/upscaler_gpu_test.cpp)
-pt_addexecutable(pt_peephole_look_test tests/peephole_look_test.cpp)
+pt_addengineexecutable(pt_upscaler_gpu_test tests/upscaler_gpu_test.cpp)
+pt_addengineexecutable(pt_peephole_look_test tests/peephole_look_test.cpp)
 
 # the occluder stage of the original's light culling (0xD2A100, 0xD2AC10), src/engine/render/light_cull.cpp
-pt_addexecutable(pt_light_cull_test tests/light_cull_test.cpp)
+pt_addengineexecutable(pt_light_cull_test tests/light_cull_test.cpp)
 
 # the option defaults from the system language (0x91D7B0)
-pt_addexecutable(pt_language_default_test tests/language_default_test.cpp)
+pt_addengineexecutable(pt_language_default_test tests/language_default_test.cpp)
 
 # the boot load's outcomes and the failed writes behind the save dialogs (0x947C60, 0x9476D0)
-pt_addexecutable(pt_save_status_test tests/save_status_test.cpp)
+pt_addengineexecutable(pt_save_status_test tests/save_status_test.cpp)
 
-pt_addexecutable(pt_save_reset_test tests/save_reset_test.cpp)
-pt_addexecutable(pt_multilingual_test tests/multilingual_test.cpp)
+pt_addengineexecutable(pt_save_reset_test tests/save_reset_test.cpp)
+pt_addengineexecutable(pt_multilingual_test tests/multilingual_test.cpp)
 
 target_compile_definitions(
     pt_engine
@@ -583,14 +591,14 @@ foreach(license ${PT_FONT_LICENSES})
     )
 endforeach()
 
-pt_addexecutable(pt_mouse_render_test tests/mouse_render_test.cpp)
-pt_addexecutable(pt_skin_render_test tests/skin_render_test.cpp)
+pt_addengineexecutable(pt_mouse_render_test tests/mouse_render_test.cpp)
+pt_addengineexecutable(pt_skin_render_test tests/skin_render_test.cpp)
 
 # the mod override index, mod.json and the mod script sandbox (docs/modding.md); no game files needed
 # the platform layer (src/engine/platform: os, http, update check) on Windows and Linux, docs/linux.md
-pt_addexecutable(pt_platform_test tests/platform_test.cpp)
+pt_addengineexecutable(pt_platform_test tests/platform_test.cpp)
 
-pt_addexecutable(pt_mods_test tests/mods_test.cpp)
-pt_addexecutable(pt_archive_model_camera_test tests/archive_model_camera_test.cpp)
-pt_addexecutable(pt_display_modes_test tests/display_modes_test.cpp)
-pt_addexecutable(pt_pipeline_cache_store_test tests/pipeline_cache_store_test.cpp)
+pt_addengineexecutable(pt_mods_test tests/mods_test.cpp)
+pt_addengineexecutable(pt_archive_model_camera_test tests/archive_model_camera_test.cpp)
+pt_addengineexecutable(pt_display_modes_test tests/display_modes_test.cpp)
+pt_addengineexecutable(pt_pipeline_cache_store_test tests/pipeline_cache_store_test.cpp)
