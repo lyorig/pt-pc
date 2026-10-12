@@ -27,7 +27,6 @@ else()
 endif()
 
 set(pt_texture_zip "${PT_TEXTURE_RUNTIME_DIR}/runtime-${pt_texture_flavor}.zip")
-
 if(
     WIN32
     AND NOT EXISTS "${pt_texture_zip}"
@@ -54,7 +53,6 @@ if(NOT EXISTS "${pt_texture_zip}")
         )
     endif()
 endif()
-
 set_property(
     TARGET pt
     APPEND
@@ -73,6 +71,7 @@ file(
 
 set_property(TARGET pt APPEND PROPERTY LINK_DEPENDS ${pt_texture_notices})
 file(SHA256 "${pt_texture_zip}" pt_texture_hash)
+
 if(NOT pt_texture_hash STREQUAL "${pt_texture_sha256}")
     message(FATAL_ERROR "Enhanced texture runtime archive checksum mismatch")
 endif()
@@ -80,7 +79,6 @@ endif()
 set(pt_texture_runtime
     "${PT_TEXTURE_RUNTIME_DIR}/realesrgan-ncnn-vulkan-v0.2.0-${pt_texture_flavor}"
 )
-
 if(NOT EXISTS "${pt_texture_runtime}/${pt_texture_exe}")
     file(
         ARCHIVE_EXTRACT

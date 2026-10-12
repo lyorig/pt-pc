@@ -42,340 +42,6 @@ endif()
 
 include(Dependencies)
 
-set(PT_ENGINE_SOURCES
-    src/engine/anim/anim_codec.cpp
-    src/engine/anim/anim_test.cpp
-    src/engine/anim/demo_file.cpp
-    src/engine/anim/gani.cpp
-    src/engine/anim/help_bones.cpp
-    src/engine/anim/motion_data.cpp
-    src/engine/anim/rig.cpp
-    src/engine/anim/sim_bones.cpp
-    src/engine/anim/sim_physics.cpp
-    src/engine/anim/skeleton.cpp
-    src/engine/assets/enhanced_textures.cpp
-    src/engine/assets/fmdl.cpp
-    src/engine/assets/ftex.cpp
-    src/engine/assets/geom.cpp
-    src/engine/assets/gltf_model.cpp
-    src/engine/assets/texture_cache.cpp
-    src/engine/audio/audio_engine.cpp
-    src/engine/audio/controller_haptics.cpp
-    src/engine/audio/controller_pcm_capture.cpp
-    src/engine/audio/dsp.cpp
-    src/engine/audio/motion_generator.cpp
-    src/engine/audio/sound_engine.cpp
-    src/engine/audio/sound_package.cpp
-    src/engine/audio/sound_system.cpp
-    src/engine/audio/subtitles.cpp
-    src/engine/audio/wem.cpp
-    src/engine/audio/wwise_bank.cpp
-    src/engine/audio/wwise_vorbis.cpp
-    src/engine/core/crash_report.cpp
-    src/engine/core/crash_upload.cpp
-    src/engine/core/json.cpp
-    src/engine/core/log.cpp
-    src/engine/core/memory_status.cpp
-    src/engine/core/pathcode.cpp
-    src/engine/core/resource_path.cpp
-    src/engine/core/strcode.cpp
-    src/engine/data/fox2.cpp
-    src/engine/fs/fox_crypt.cpp
-    src/engine/fs/fpk.cpp
-    src/engine/fs/mod_level.cpp
-    src/engine/fs/mods.cpp
-    src/engine/fs/psarc.cpp
-    src/engine/fs/qar.cpp
-    src/engine/fs/vfs.cpp
-    src/engine/physics/collision_world.cpp
-    src/engine/platform/controller_feedback.cpp
-    src/engine/platform/controller_speaker.cpp
-    src/engine/platform/controller_speaker_route.cpp
-    src/engine/platform/graphics_presets.cpp
-    src/engine/platform/http.cpp
-    src/engine/platform/input.cpp
-    src/engine/platform/livesplit.cpp
-    src/engine/platform/os.cpp
-    src/engine/platform/sdl_diag.cpp
-    src/engine/platform/settings.cpp
-    src/engine/platform/update_check.cpp
-    src/engine/platform/user_data.cpp
-    src/engine/platform/virtual_pad.cpp
-    src/engine/render/light_cull.cpp
-    src/engine/render/mesh.cpp
-    src/engine/render/model_cache.cpp
-    src/engine/render/pipeline_cache_runtime.cpp
-    src/engine/render/pipeline_cache_store.cpp
-    src/engine/render/raytracing.cpp
-    src/engine/render/render_util.cpp
-    src/engine/render/renderer.cpp
-    src/engine/render/scene_frame.cpp
-    src/engine/render/scene_lighting.cpp
-    src/engine/render/scene_post.cpp
-    src/engine/render/scene_renderer.cpp
-    src/engine/render/subsurface_pass.cpp
-    src/engine/render/texture_manager.cpp
-    src/engine/render/upscale/dlss_backend.cpp
-    src/engine/render/upscale/frame_generation.cpp
-    src/engine/render/upscale/fsr_backend.cpp
-    src/engine/render/upscale/metalfx_stub.cpp
-    src/engine/render/upscale/scene_upscale.cpp
-    src/engine/render/upscale/streamline.cpp
-    src/engine/render/upscale/upscale.cpp
-    src/engine/render/upscale/upscale_platform.cpp
-    src/engine/render/upscale/xess_backend.cpp
-    src/engine/render/vfx_pass.cpp
-    src/engine/render/vk.cpp
-    src/engine/render/vk_context.cpp
-    src/engine/script/lua_vm.cpp
-    src/engine/script/mod_lua.cpp
-    src/engine/ui/asset_browser.cpp
-    src/engine/ui/ffnt.cpp
-    src/engine/ui/lang_file.cpp
-    src/engine/ui/text_layout.cpp
-    src/engine/ui/ui_batch.cpp
-    src/engine/ui/uia.cpp
-    src/engine/ui/uif.cpp
-    src/engine/ui/uigb.cpp
-    src/engine/ui/uilb.cpp
-    src/engine/ui/unicode_font.cpp
-    src/engine/ui/unicode_font_harfbuzz.cpp
-    src/engine/vfx/vfx_effect.cpp
-    src/engine/vfx/vfx_file.cpp
-    src/engine/vfx/vfx_lensflare.cpp
-    src/engine/vfx/vfx_schema.cpp
-    src/engine/vfx/vfx_system.cpp
-    src/engine/voice/microphone.cpp
-    src/engine/voice/voice_recognizer.cpp
-    src/engine/xr/xr_host.cpp
-)
-set(PT_ENGINE_HEADERS
-    src/engine/anim/anim_codec.h
-    src/engine/anim/anim_test.h
-    src/engine/anim/demo_file.h
-    src/engine/anim/gani.h
-    src/engine/anim/help_bones.h
-    src/engine/anim/motion_data.h
-    src/engine/anim/rig.h
-    src/engine/anim/sim_bones.h
-    src/engine/anim/sim_physics.h
-    src/engine/anim/skeleton.h
-    src/engine/assets/enhanced_textures.h
-    src/engine/assets/fmdl.h
-    src/engine/assets/ftex.h
-    src/engine/assets/geom.h
-    src/engine/assets/gltf_model.h
-    src/engine/assets/texture_cache.h
-    src/engine/audio/audio_engine.h
-    src/engine/audio/channel_layout.h
-    src/engine/audio/controller_haptics.h
-    src/engine/audio/controller_pcm_capture.h
-    src/engine/audio/dsp.h
-    src/engine/audio/motion_generator.h
-    src/engine/audio/sound_engine.h
-    src/engine/audio/sound_package.h
-    src/engine/audio/sound_system.h
-    src/engine/audio/subtitles.h
-    src/engine/audio/wem.h
-    src/engine/audio/wwise_bank.h
-    src/engine/audio/wwise_vorbis.h
-    src/engine/core/arabic_text.h
-    src/engine/core/chinese_text.h
-    src/engine/core/crash_report.h
-    src/engine/core/crash_upload.h
-    src/engine/core/czech_text.h
-    src/engine/core/french_text.h
-    src/engine/core/german_text.h
-    src/engine/core/italian_text.h
-    src/engine/core/japanese_text.h
-    src/engine/core/json.h
-    src/engine/core/localized_text.h
-    src/engine/core/log.h
-    src/engine/core/memory_status.h
-    src/engine/core/parallel_for.h
-    src/engine/core/pathcode.h
-    src/engine/core/polish_text.h
-    src/engine/core/portuguese_text.h
-    src/engine/core/resource_path.h
-    src/engine/core/russian_text.h
-    src/engine/core/spanish_text.h
-    src/engine/core/strcode.h
-    src/engine/core/turkish_text.h
-    src/engine/core/ukrainian_text.h
-    src/engine/data/fox2.h
-    src/engine/fs/fox_crypt.h
-    src/engine/fs/fpk.h
-    src/engine/fs/mods.h
-    src/engine/fs/psarc.h
-    src/engine/fs/qar.h
-    src/engine/fs/vfs.h
-    src/engine/physics/collision_world.h
-    src/engine/platform/controller_feedback.h
-    src/engine/platform/controller_speaker.h
-    src/engine/platform/display_modes.h
-    src/engine/platform/graphics_presets.h
-    src/engine/platform/http.h
-    src/engine/platform/input.h
-    src/engine/platform/livesplit.h
-    src/engine/platform/os.h
-    src/engine/platform/sdl_diag.h
-    src/engine/platform/self_integrity.h
-    src/engine/platform/settings.h
-    src/engine/platform/update_check.h
-    src/engine/platform/user_data.h
-    src/engine/platform/virtual_pad.h
-    src/engine/render/camera.h
-    src/engine/render/dominant_light.h
-    src/engine/render/free_camera.h
-    src/engine/render/gpu_types.h
-    src/engine/render/hdr_output.h
-    src/engine/render/light_cull.h
-    src/engine/render/mesh.h
-    src/engine/render/model_cache.h
-    src/engine/render/pipeline_cache_store.h
-    src/engine/render/raytracing.h
-    src/engine/render/render_util.h
-    src/engine/render/renderer.h
-    src/engine/render/scene_lighting.h
-    src/engine/render/scene_renderer.h
-    src/engine/render/subsurface_pass.h
-    src/engine/render/texture_manager.h
-    src/engine/render/upscale/frame_generation.h
-    src/engine/render/upscale/streamline.h
-    src/engine/render/upscale/upscale.h
-    src/engine/render/upscale/upscale_platform.h
-    src/engine/render/vfx_pass.h
-    src/engine/render/vk.h
-    src/engine/render/vk_context.h
-    src/engine/script/lua_vm.h
-    src/engine/script/mod_lua.h
-    src/engine/ui/asset_browser.h
-    src/engine/ui/ffnt.h
-    src/engine/ui/lang_file.h
-    src/engine/ui/text_layout.h
-    src/engine/ui/ui_batch.h
-    src/engine/ui/uia.h
-    src/engine/ui/uif.h
-    src/engine/ui/uigb.h
-    src/engine/ui/uilb.h
-    src/engine/vfx/vfx_effect.h
-    src/engine/vfx/vfx_file.h
-    src/engine/vfx/vfx_lensflare.h
-    src/engine/vfx/vfx_schema.h
-    src/engine/vfx/vfx_system.h
-    src/engine/voice/microphone.h
-    src/engine/voice/voice_recognizer.h
-    src/engine/xr/xr_host.h
-    src/engine/xr/xr_view.h
-)
-
-set(PT_GAME_SOURCES
-    src/game/archive.cpp
-    src/game/archive_theater.cpp
-    src/game/debug_panel.cpp
-    src/game/demo_stream.cpp
-    src/game/demo_system.cpp
-    src/game/floor_level.cpp
-    src/game/game.cpp
-    src/game/game_controller.cpp
-    src/game/game_objects.cpp
-    src/game/game_plus_arm.cpp
-    src/game/game_sound.cpp
-    src/game/gimmick_animation.cpp
-    src/game/input_script.cpp
-    src/game/lua_entity.cpp
-    src/game/message_system.cpp
-    src/game/nazo.cpp
-    src/game/parameters.cpp
-    src/game/player.cpp
-    src/game/player_animation.cpp
-    src/game/prompt_textures.cpp
-    src/game/render_scene.cpp
-    src/game/save_data.cpp
-    src/game/screen_effects.cpp
-    src/game/script_api.cpp
-    src/game/script_bindings.cpp
-    src/game/script_host.cpp
-    src/game/speedrun.cpp
-    src/game/stage_data.cpp
-    src/game/stage_manager.cpp
-    src/game/trap_system.cpp
-    src/game/ui/archive_view.cpp
-    src/game/ui/demo_ui.cpp
-    src/game/ui/game_ui.cpp
-    src/game/ui/options_menu.cpp
-    src/game/ui/pc_settings.cpp
-    src/game/ui/pc_settings_page.cpp
-    src/game/ui/photo_panel.cpp
-    src/game/ui/photo_preset.cpp
-    src/game/ui/port_credits.cpp
-    src/game/ui/save_icon.cpp
-    src/game/ui/subliminal.cpp
-    src/game/ui/subtitle_player.cpp
-    src/game/ui/ui_assets.cpp
-    src/game/ui/ui_icons.cpp
-    src/game/ui/uia_player.cpp
-    src/game/ui/uif_view.cpp
-    src/game/vfx_scene.cpp
-    src/game/vr_play.cpp
-    src/game/archive.h
-    src/game/archive_model_camera.h
-    src/game/archive_theater.h
-    src/game/blur_sway.h
-    src/game/debug_panel.h
-    src/game/demo_stream.h
-    src/game/demo_system.h
-    src/game/floor_level.h
-    src/game/follower_shadow.h
-    src/game/game.h
-    src/game/game_controller.h
-    src/game/game_objects.h
-    src/game/game_plus_arm.h
-    src/game/game_sound.h
-    src/game/gimmick_animation.h
-    src/game/input_script.h
-    src/game/loop_browser.h
-    src/game/lua_entity.h
-    src/game/message_system.h
-    src/game/nazo.h
-    src/game/outro_input.h
-    src/game/parameters.h
-    src/game/player.h
-    src/game/player_animation.h
-    src/game/prompt_textures.h
-    src/game/render_mouse.h
-    src/game/render_scene.h
-    src/game/save_data.h
-    src/game/screen_effects.h
-    src/game/script_api.h
-    src/game/script_host.h
-    src/game/speedrun.h
-    src/game/stage_data.h
-    src/game/stage_manager.h
-    src/game/trap_system.h
-    src/game/ui/archive_view.h
-    src/game/ui/demo_ui.h
-    src/game/ui/game_ui.h
-    src/game/ui/museum_layout.h
-    src/game/ui/options_menu.h
-    src/game/ui/pc_settings.h
-    src/game/ui/pc_settings_page.h
-    src/game/ui/photo_panel.h
-    src/game/ui/photo_preset.h
-    src/game/ui/port_credits.h
-    src/game/ui/save_icon.h
-    src/game/ui/subliminal.h
-    src/game/ui/subtitle_player.h
-    src/game/ui/ui_assets.h
-    src/game/ui/ui_icons.h
-    src/game/ui/uia_player.h
-    src/game/ui/uif_view.h
-    src/game/vfx_scene.h
-    src/game/vr_play.h
-    # no sources in src/decomp
-    # no headers in src/decomp
-)
-
 # The release version and metadata endpoint shared by the game and installers (docs/updates.md).
 # GitHub supplies release metadata and platform asset URLs; no separate JSON release asset is needed.
 # This build's version: raised here for each release. tools/ci/release.py --version sets it through the environment at build
@@ -418,14 +84,24 @@ add_custom_target(
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/generated/pt_version.h"
 )
 
-pt_add_library(pt_engine STATIC ${PT_ENGINE_SOURCES} ${PT_GAME_SOURCES})
+file(GLOB_RECURSE PT_ENGINE_SOURCES CONFIGURE_DEPENDS src/engine/*.cpp)
+file(GLOB_RECURSE PT_ENGINE_HEADERS CONFIGURE_DEPENDS src/engine/*.h)
+file(
+    GLOB_RECURSE PT_GAME_SOURCES
+    CONFIGURE_DEPENDS
+    src/game/*.cpp
+    src/decomp/*.cpp
+)
+file(GLOB_RECURSE PT_GAME_HEADERS CONFIGURE_DEPENDS src/game/*.h src/decomp/*.h)
+
+pt_add_library(pt_engine STATIC)
 target_sources(
     pt_engine
     PRIVATE ${PT_ENGINE_SOURCES} ${PT_GAME_SOURCES}
     PUBLIC
         FILE_SET HEADERS
             BASE_DIRS src/engine src/decomp
-            FILES ${PT_ENGINE_HEADERS}
+            FILES ${PT_ENGINE_HEADERS} ${PT_GAME_HEADERS}
 )
 
 # Game+ (docs/gameplay.md, Game+): the content a finished game unlocks, ON since 1.0 (every release ships it). OFF builds keep
@@ -968,13 +644,7 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" "$<TARGET_FILE_DIR:pt>/fonts"
 )
 
-# the bundled fonts' SIL OFL notices also go to licenses/, beside the SDK notices
-set(PT_FONT_LICENSES
-    assets/fonts/OFL-NotoKufiArabic.txt
-    assets/fonts/OFL-NotoNaskhArabic.txt
-    assets/fonts/OFL-NotoSans.txt
-    assets/fonts/OFL-NotoSansSC.txt
-)
+file(GLOB PT_FONT_LICENSES CONFIGURE_DEPENDS assets/fonts/OFL-*.txt)
 
 foreach(license ${PT_FONT_LICENSES})
     get_filename_component(license_name "${license}" NAME)
