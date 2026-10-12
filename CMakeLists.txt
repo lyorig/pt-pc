@@ -84,7 +84,8 @@ endif()
 add_custom_target(
     pt_version
     COMMAND
-        "${CMAKE_COMMAND}" "-DOUT=${CMAKE_CURRENT_BINARY_DIR}/generated/pt_version.h"
+        "${CMAKE_COMMAND}"
+        "-DOUT=${CMAKE_CURRENT_BINARY_DIR}/generated/pt_version.h"
         "-DPT_VERSION=${PT_VERSION}"
         "-DPT_UPDATE_MANIFEST_URL=${PT_UPDATE_MANIFEST_URL}" -P
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake"
@@ -111,7 +112,10 @@ else()
 endif()
 
 target_compile_features(pt_engine PUBLIC cxx_std_20)
-target_include_directories(pt_engine PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_include_directories(
+    pt_engine
+    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated"
+)
 add_dependencies(pt_engine pt_version)
 target_include_directories(pt_engine PUBLIC src)
 target_compile_definitions(
@@ -151,15 +155,32 @@ if(WIN32)
     )
 endif()
 
-# Add a C++20 executable, using the `pt_engine` target.
-function(PT_AddExecutable name)
-    add_executable(${name} ${ARGN})
+# Sets certain default sane properties for a target.
+#
+# Currently, this is:
+# - C++20 (without extensions)
+# - MSVC-specific options
+#   - /utf-8
+#   - /EHsc
+function(pt_setcommontargetproperties name)
     target_compile_features(${name} PRIVATE cxx_std_20)
     set_target_properties(${name} PROPERTIES CXX_EXTENSIONS OFF)
-    target_link_libraries(${name} PRIVATE pt_engine)
+
+    if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        target_compile_options(${name} PRIVATE /Wall /utf-8 /EHsc)
+    elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+        target_compile_options(${name} PRIVATE -Wall -Wpedantic)
+    endif()
 endfunction()
 
-PT_AddExecutable(pt WIN32 src/main.cpp)
+# Add an executable with common properties, using the `pt_engine` target.
+function(pt_addexecutable name)
+    add_executable(${name} ${ARGN})
+    target_link_libraries(${name} PRIVATE pt_engine)
+    pt_setcommontargetproperties(${name})
+endfunction()
+
+pt_addexecutable(pt WIN32 src/main.cpp)
 
 if(WIN32)
     target_sources(pt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/pt.rc")
@@ -170,7 +191,8 @@ endif()
 add_custom_target(
     pt_build_id
     COMMAND
-        "${CMAKE_COMMAND}" "-DOUT=${CMAKE_CURRENT_BINARY_DIR}/generated/build_id.h"
+        "${CMAKE_COMMAND}"
+        "-DOUT=${CMAKE_CURRENT_BINARY_DIR}/generated/build_id.h"
         "-DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}" -P
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_id.cmake"
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/generated/build_id.h"
@@ -182,7 +204,7 @@ add_dependencies(pt pt_build_id)
 # the release 1.0 game: the loop browser stays locked until the game was finished once, its entries open as their loops are reached
 # (PT_RELEASE_LOCKS, docs/gameplay.md loop browser); pt (developer) keeps every entry open. tools/ci/release.py
 # builds it and tools/package.py --exe ships it as pt.exe
-PT_AddExecutable(pt_release WIN32 EXCLUDE_FROM_ALL src/main.cpp)
+pt_addexecutable(pt_release WIN32 EXCLUDE_FROM_ALL src/main.cpp)
 
 if(WIN32)
     target_sources(pt_release PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/pt.rc")
@@ -190,12 +212,15 @@ if(WIN32)
 endif()
 
 target_compile_definitions(pt_release PRIVATE PT_RELEASE_LOCKS=1)
-target_include_directories(pt_release PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_include_directories(
+    pt_release
+    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated"
+)
 
 add_dependencies(pt_release pt_build_id)
 
-PT_AddExecutable(pt_gouge_input_test tests/gouge_input_test.cpp)
-PT_AddExecutable(pt_outro_input_test tests/outro_input_test.cpp)
+pt_addexecutable(pt_gouge_input_test tests/gouge_input_test.cpp)
+pt_addexecutable(pt_outro_input_test tests/outro_input_test.cpp)
 
 set(PT_SETUP_PAYLOAD
     "${CMAKE_CURRENT_SOURCE_DIR}/dump/installer-20261002/native/payload.bin"
@@ -225,20 +250,22 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
     enable_language(RC)
     # the application manifest goes in as a resource (Common Controls 6 for the progress bar, docs/installer.md); the
     # linker must not make its own, or the two collide
-    set(PT_SETUP_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/installer/Native/setup.manifest")
+    set(PT_SETUP_MANIFEST
+        "${CMAKE_CURRENT_SOURCE_DIR}/installer/Native/setup.manifest"
+    )
     configure_file(
         installer/Native/setup.rc.in
         "${CMAKE_CURRENT_BINARY_DIR}/private-setup.rc"
         @ONLY
     )
-    
+
     set_source_files_properties(
         "${CMAKE_CURRENT_BINARY_DIR}/private-setup.rc"
         PROPERTIES
             OBJECT_DEPENDS
                 "${PT_SETUP_PAYLOAD};${PT_SETUP_MANIFEST};${CMAKE_CURRENT_SOURCE_DIR}/assets/pt.ico"
     )
-    
+
     add_executable(
         pt_setup
         WIN32
@@ -248,18 +275,18 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
         src/engine/platform/update_check.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/private-setup.rc"
     )
-    
+
     target_include_directories(
         pt_setup
         PRIVATE src installer/Native "${CMAKE_CURRENT_BINARY_DIR}/generated"
     )
-    
+
     add_dependencies(pt_setup pt_version)
     target_compile_definitions(
         pt_setup
         PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN UNICODE _UNICODE
     )
-    
+
     target_link_libraries(
         pt_setup
         PRIVATE
@@ -273,9 +300,9 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
             bcrypt
             gdiplus
     )
-    
+
     target_link_options(pt_setup PRIVATE /MANIFEST:NO)
-    
+
     if(MSVC)
         target_compile_options(pt_setup PRIVATE /utf-8 /EHsc)
         target_link_options(pt_setup PRIVATE /OPT:REF /OPT:ICF)
@@ -398,17 +425,17 @@ foreach(game pt pt_release)
     add_dependencies(${game} pt_voice_runtime)
 endforeach()
 
-PT_AddExecutable(pt_tests tests/test_strcode.cpp)
-PT_AddExecutable(pt_voice_match_test tests/voice_match_test.cpp)
-PT_AddExecutable(pt_vfx_test tests/vfx_test.cpp)
-PT_AddExecutable(pt_collision_test tests/collision_test.cpp)
-PT_AddExecutable(pt_localization_test tests/localization_test.cpp)
+pt_addexecutable(pt_tests tests/test_strcode.cpp)
+pt_addexecutable(pt_voice_match_test tests/voice_match_test.cpp)
+pt_addexecutable(pt_vfx_test tests/vfx_test.cpp)
+pt_addexecutable(pt_collision_test tests/collision_test.cpp)
+pt_addexecutable(pt_localization_test tests/localization_test.cpp)
 if(MSVC)
     target_compile_options(pt_localization_test PRIVATE /utf-8)
 endif()
 
-PT_AddExecutable(pt_texture_cache_test tests/texture_cache_test.cpp)
-PT_AddExecutable(pt_texture_job_test tests/texture_job_test.cpp)
+pt_addexecutable(pt_texture_cache_test tests/texture_cache_test.cpp)
+pt_addexecutable(pt_texture_job_test tests/texture_job_test.cpp)
 
 set(PT_TEXTURE_DESCRIPTOR_SHADER
     "${CMAKE_CURRENT_BINARY_DIR}/tests/texture_descriptor.comp.spv"
@@ -416,7 +443,8 @@ set(PT_TEXTURE_DESCRIPTOR_SHADER
 
 add_custom_command(
     OUTPUT "${PT_TEXTURE_DESCRIPTOR_SHADER}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/tests"
+    COMMAND
+        ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/tests"
     COMMAND
         ${Vulkan_GLSLC_EXECUTABLE} --target-env=vulkan1.3 -O
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/texture_descriptor.comp" -o
@@ -430,7 +458,7 @@ add_custom_target(
     DEPENDS "${PT_TEXTURE_DESCRIPTOR_SHADER}"
 )
 
-PT_AddExecutable(pt_texture_descriptor_test tests/texture_descriptor_test.cpp)
+pt_addexecutable(pt_texture_descriptor_test tests/texture_descriptor_test.cpp)
 target_compile_definitions(
     pt_texture_descriptor_test
     PRIVATE PT_TEXTURE_DESCRIPTOR_SHADER="${PT_TEXTURE_DESCRIPTOR_SHADER}"
@@ -462,7 +490,7 @@ add_custom_target(
     DEPENDS "${PT_REFLECTION_MIX_SHADER}"
 )
 
-PT_AddExecutable(pt_reflection_mix_test tests/reflection_mix_test.cpp)
+pt_addexecutable(pt_reflection_mix_test tests/reflection_mix_test.cpp)
 target_compile_definitions(
     pt_reflection_mix_test
     PRIVATE PT_REFLECTION_MIX_SHADER="${PT_REFLECTION_MIX_SHADER}"
@@ -470,58 +498,60 @@ target_compile_definitions(
 
 add_dependencies(pt_reflection_mix_test pt_reflection_mix_shader)
 
-PT_AddExecutable(
+pt_addexecutable(
     pt_dualsense_probe
     EXCLUDE_FROM_ALL
     tests/dualsense_hid_probe.cpp
 )
 
-PT_AddExecutable(pt_audio_channel_layout_test tests/audio_channel_layout_test.cpp)
-PT_AddExecutable(pt_controller_feedback_test tests/controller_feedback_test.cpp)
-PT_AddExecutable(pt_photo_preset_test tests/photo_preset_test.cpp)
-PT_AddExecutable(pt_photo_panel_test tests/photo_panel_test.cpp)
-PT_AddExecutable(
+pt_addexecutable(pt_audio_channel_layout_test tests/audio_channel_layout_test.cpp)
+pt_addexecutable(pt_controller_feedback_test tests/controller_feedback_test.cpp)
+pt_addexecutable(pt_photo_preset_test tests/photo_preset_test.cpp)
+pt_addexecutable(pt_photo_panel_test tests/photo_panel_test.cpp)
+pt_addexecutable(
     pt_controller_speaker_route_test
     tests/controller_speaker_route_test.cpp
 )
 
-PT_AddExecutable(pt_hdr_output_test tests/hdr_output_test.cpp)
-PT_AddExecutable(pt_audio_test tests/audio_test.cpp)
+pt_addexecutable(pt_hdr_output_test tests/hdr_output_test.cpp)
+pt_addexecutable(pt_audio_test tests/audio_test.cpp)
 if(MSVC)
     target_compile_options(pt_audio_test PRIVATE /utf-8 /EHsc)
 endif()
 
-PT_AddExecutable(pt_graphics_preset_test tests/graphics_preset_test.cpp)
+pt_addexecutable(pt_graphics_preset_test tests/graphics_preset_test.cpp)
 
 # the full screen blur's pulse start per game frame (0x9231D0), src/game/blur_sway.h
-PT_AddExecutable(pt_blur_sway_test tests/blur_sway_test.cpp)
-PT_AddExecutable(pt_unicode_paths_test tests/unicode_paths_test.cpp)
-PT_AddExecutable(pt_user_data_test tests/user_data_test.cpp)
-PT_AddExecutable(pt_settings_roundtrip_test tests/settings_roundtrip_test.cpp)
+pt_addexecutable(pt_blur_sway_test tests/blur_sway_test.cpp)
+
+pt_addexecutable(pt_unicode_paths_test tests/unicode_paths_test.cpp)
+pt_addexecutable(pt_user_data_test tests/user_data_test.cpp)
+pt_addexecutable(pt_settings_roundtrip_test tests/settings_roundtrip_test.cpp)
 
 # the published body yaw that PlayerInputDir (0x915850) reads
-PT_AddExecutable(pt_player_publish_test tests/player_publish_test.cpp)
+pt_addexecutable(pt_player_publish_test tests/player_publish_test.cpp)
 
 # the hair highlight's dominant light direction over time (0x8D12A0)
-PT_AddExecutable(pt_dominant_light_test tests/dominant_light_test.cpp)
+pt_addexecutable(pt_dominant_light_test tests/dominant_light_test.cpp)
 
 # the VR mode's view mapping (src/engine/xr/xr_view.h, docs/vr.md)
-PT_AddExecutable(pt_vr_view_test tests/vr_view_test.cpp)
+pt_addexecutable(pt_vr_view_test tests/vr_view_test.cpp)
 
 # the hardware check of FSR 3 frame generation (src/engine/render/upscale/upscale.h, docs/upscaling.md)
-PT_AddExecutable(pt_upscaler_gpu_test tests/upscaler_gpu_test.cpp)
-PT_AddExecutable(pt_peephole_look_test tests/peephole_look_test.cpp)
+pt_addexecutable(pt_upscaler_gpu_test tests/upscaler_gpu_test.cpp)
+pt_addexecutable(pt_peephole_look_test tests/peephole_look_test.cpp)
 
 # the occluder stage of the original's light culling (0xD2A100, 0xD2AC10), src/engine/render/light_cull.cpp
-PT_AddExecutable(pt_light_cull_test tests/light_cull_test.cpp)
+pt_addexecutable(pt_light_cull_test tests/light_cull_test.cpp)
 
 # the option defaults from the system language (0x91D7B0)
-PT_AddExecutable(pt_language_default_test tests/language_default_test.cpp)
+pt_addexecutable(pt_language_default_test tests/language_default_test.cpp)
 
 # the boot load's outcomes and the failed writes behind the save dialogs (0x947C60, 0x9476D0)
-PT_AddExecutable(pt_save_status_test tests/save_status_test.cpp)
-PT_AddExecutable(pt_save_reset_test tests/save_reset_test.cpp)
-PT_AddExecutable(pt_multilingual_test tests/multilingual_test.cpp)
+pt_addexecutable(pt_save_status_test tests/save_status_test.cpp)
+
+pt_addexecutable(pt_save_reset_test tests/save_reset_test.cpp)
+pt_addexecutable(pt_multilingual_test tests/multilingual_test.cpp)
 if(MSVC)
     target_compile_options(pt_multilingual_test PRIVATE /utf-8)
 endif()
@@ -535,8 +565,8 @@ add_custom_command(
     TARGET pt
     POST_BUILD
     COMMAND
-        ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts"
-        "$<TARGET_FILE_DIR:pt>/fonts"
+        ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" "$<TARGET_FILE_DIR:pt>/fonts"
 )
 
 # the bundled fonts' SIL OFL notices also go to licenses/, beside the SDK notices
@@ -560,13 +590,14 @@ foreach(license ${PT_FONT_LICENSES})
     )
 endforeach()
 
-PT_AddExecutable(pt_mouse_render_test tests/mouse_render_test.cpp)
-PT_AddExecutable(pt_skin_render_test tests/skin_render_test.cpp)
+pt_addexecutable(pt_mouse_render_test tests/mouse_render_test.cpp)
+pt_addexecutable(pt_skin_render_test tests/skin_render_test.cpp)
 
 # the mod override index, mod.json and the mod script sandbox (docs/modding.md); no game files needed
 # the platform layer (src/engine/platform: os, http, update check) on Windows and Linux, docs/linux.md
-PT_AddExecutable(pt_platform_test tests/platform_test.cpp)
-PT_AddExecutable(pt_mods_test tests/mods_test.cpp)
-PT_AddExecutable(pt_archive_model_camera_test tests/archive_model_camera_test.cpp)
-PT_AddExecutable(pt_display_modes_test tests/display_modes_test.cpp)
-PT_AddExecutable(pt_pipeline_cache_store_test tests/pipeline_cache_store_test.cpp)
+pt_addexecutable(pt_platform_test tests/platform_test.cpp)
+
+pt_addexecutable(pt_mods_test tests/mods_test.cpp)
+pt_addexecutable(pt_archive_model_camera_test tests/archive_model_camera_test.cpp)
+pt_addexecutable(pt_display_modes_test tests/display_modes_test.cpp)
+pt_addexecutable(pt_pipeline_cache_store_test tests/pipeline_cache_store_test.cpp)
