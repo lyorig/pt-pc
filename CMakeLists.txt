@@ -100,6 +100,7 @@ add_custom_target(
 )
 
 add_library(pt_engine STATIC ${PT_ENGINE_SOURCES} ${PT_GAME_SOURCES})
+pt_setcommontargetproperties(pt_engine)
 
 # Game+ (docs/gameplay.md, Game+): the content a finished game unlocks, ON since 1.0 (every release ships it). OFF builds keep
 # it inert (the save still stores the finish tag and count, nothing else changes). The first configure takes the default from
@@ -118,7 +119,6 @@ else()
     target_compile_definitions(pt_engine PUBLIC PT_GAMEPLUS=0)
 endif()
 
-target_compile_features(pt_engine PUBLIC cxx_std_20)
 target_include_directories(
     pt_engine
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated"
@@ -148,10 +148,6 @@ else()
     target_link_libraries(pt_engine PUBLIC ${CMAKE_DL_LIBS} Threads::Threads)
 endif()
 
-if(MSVC)
-    target_compile_options(pt_engine PRIVATE /W3 /utf-8 /EHsc)
-endif()
-
 if(WIN32)
     enable_language(RC)
     configure_file(assets/pt.rc.in "${CMAKE_CURRENT_BINARY_DIR}/pt.rc" @ONLY)
@@ -162,10 +158,11 @@ if(WIN32)
     )
 endif()
 
-# Sets certain default sane properties for a target.
+# Sets shared properties for a target.
 #
 # Currently, this is:
 # - C++20 (without extensions)
+# - sane warning flags (/W4 or -Wall)
 # - MSVC-specific options
 #   - /utf-8
 #   - /EHsc
@@ -174,7 +171,7 @@ function(pt_setcommontargetproperties name)
     set_target_properties(${name} PROPERTIES CXX_EXTENSIONS OFF)
 
     if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
-        target_compile_options(${name} PRIVATE /Wall /utf-8 /EHsc)
+        target_compile_options(${name} PRIVATE /W4 /utf-8 /EHsc)
     elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
         target_compile_options(${name} PRIVATE -Wall -Wpedantic)
     endif()
@@ -282,6 +279,7 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
         src/engine/platform/update_check.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/private-setup.rc"
     )
+    pt_setcommontargetproperties(pt_setup)
 
     target_include_directories(
         pt_setup
@@ -311,7 +309,6 @@ if(WIN32 AND EXISTS "${PT_SETUP_PAYLOAD}")
     target_link_options(pt_setup PRIVATE /MANIFEST:NO)
 
     if(MSVC)
-        target_compile_options(pt_setup PRIVATE /utf-8 /EHsc)
         target_link_options(pt_setup PRIVATE /OPT:REF /OPT:ICF)
     endif()
 endif()
@@ -326,20 +323,18 @@ if(NOT WIN32)
         src/engine/platform/update_check.cpp
         src/engine/platform/os.cpp
     )
+    pt_setcommontargetproperties(pt_setup_linux)
+
     target_include_directories(
         pt_setup_linux
         PRIVATE src installer/Native "${CMAKE_CURRENT_BINARY_DIR}/generated"
     )
+
     add_dependencies(pt_setup_linux pt_version)
     target_link_libraries(
         pt_setup_linux
         PRIVATE zlibstatic ${CMAKE_DL_LIBS} Threads::Threads
     )
-endif()
-
-if(MSVC)
-    target_compile_options(pt PRIVATE /utf-8 /EHsc)
-    target_compile_options(pt_release PRIVATE /utf-8 /EHsc)
 endif()
 
 include(Upscalers)
@@ -437,9 +432,6 @@ pt_addexecutable(pt_voice_match_test tests/voice_match_test.cpp)
 pt_addexecutable(pt_vfx_test tests/vfx_test.cpp)
 pt_addexecutable(pt_collision_test tests/collision_test.cpp)
 pt_addexecutable(pt_localization_test tests/localization_test.cpp)
-if(MSVC)
-    target_compile_options(pt_localization_test PRIVATE /utf-8)
-endif()
 
 pt_addexecutable(pt_texture_cache_test tests/texture_cache_test.cpp)
 pt_addexecutable(pt_texture_job_test tests/texture_job_test.cpp)
@@ -522,9 +514,6 @@ pt_addexecutable(
 
 pt_addexecutable(pt_hdr_output_test tests/hdr_output_test.cpp)
 pt_addexecutable(pt_audio_test tests/audio_test.cpp)
-if(MSVC)
-    target_compile_options(pt_audio_test PRIVATE /utf-8 /EHsc)
-endif()
 
 pt_addexecutable(pt_graphics_preset_test tests/graphics_preset_test.cpp)
 
@@ -559,9 +548,6 @@ pt_addexecutable(pt_save_status_test tests/save_status_test.cpp)
 
 pt_addexecutable(pt_save_reset_test tests/save_reset_test.cpp)
 pt_addexecutable(pt_multilingual_test tests/multilingual_test.cpp)
-if(MSVC)
-    target_compile_options(pt_multilingual_test PRIVATE /utf-8)
-endif()
 
 target_compile_definitions(
     pt_engine
